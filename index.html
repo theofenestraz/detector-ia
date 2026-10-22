@@ -7,8 +7,8 @@
 <meta name="description" content="Pega un texto y mira qué frases suenan a inteligencia artificial. Todo se analiza en tu navegador.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Literata:opsz,wght@7..72,400;7..72,500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=4">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body>
 <header class="top">
@@ -16,8 +16,9 @@
   <p class="tagline">Pega un texto y mira qué frases suenan a inteligencia artificial, con los criterios que publica Turnitin. Nada sale de tu navegador.</p>
 </header>
 
-<main class="layout">
-  <section class="sheet" aria-label="Texto">
+<main class="layout form">
+  <section class="sheet field" aria-labelledby="lblText">
+    <h2 class="field-label" id="lblText">Texto</h2>
     <div id="editor">
       <label for="input" class="sr-only">Texto a analizar</label>
       <textarea id="input" spellcheck="false" placeholder="Pega aquí tu texto. Hacen falta al menos 300 palabras de prosa para dar un porcentaje."></textarea>
@@ -32,7 +33,8 @@
     </div>
   </section>
 
-  <aside class="panel" aria-live="polite">
+  <aside class="panel field" aria-live="polite" aria-labelledby="lblResult">
+    <h2 class="field-label" id="lblResult">Resultado</h2>
     <div id="empty" class="empty">
       <p>Cuando analices un texto verás aquí qué parte de la prosa parece escrita por IA, con los mismos criterios que aplica Turnitin.</p>
       <dl class="legend">
@@ -43,8 +45,10 @@
     </div>
 
     <div id="result" hidden>
-      <p class="score"><span id="pct">0</span><span class="unit" id="unit">%</span></p>
-      <p class="score-label" id="scoreLabel">de la prosa evaluada parece IA</p>
+      <div class="stamp" id="stamp">
+        <p class="score"><span id="pct">0</span><span class="unit" id="unit">%</span></p>
+        <p class="score-label" id="scoreLabel">de la prosa evaluada parece IA</p>
+      </div>
       <div class="bar" role="img" id="bar">
         <span class="seg ai" id="segAI"></span><span class="seg human" id="segHuman"></span>
       </div>
@@ -81,7 +85,7 @@
   </aside>
 </main>
 
-<script src="detector.js?v=4"></script>
-<script src="app.js?v=4"></script>
+<script src="detector.js?v=7"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>

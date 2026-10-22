@@ -119,9 +119,11 @@ Ahora estoy intentando usarla de otra forma: primero hago el ejercicio yo, aunqu
       label.textContent = 'de la prosa evaluada parece IA';
       verdict = r.percentAI === 0 ? 'Ninguna frase supera el umbral. El texto se clasifica como humano.'
         : r.percentAI >= 70 ? 'La mayor parte de la prosa se clasifica como IA.'
-        : 'Una parte de la prosa se clasifica como IA. Revisa las frases marcadas en amarillo.';
+        : 'Una parte de la prosa se clasifica como IA. Revisa las frases marcadas en rojo.';
     }
     $('verdict').textContent = verdict;
+    const stamp = $('stamp');
+    stamp.dataset.state = r.status === 'short' || r.status === 'long' ? 'none' : r.status === 'ok' && r.percentAI === 0 ? 'clean' : 'ai';
 
     const shownPct = r.status === 'ok' || revealed ? r.percentAI : 0;
     $('segAI').style.width = shownPct + '%';
@@ -171,6 +173,11 @@ Ahora estoy intentando usarla de otra forma: primero hago el ejercicio yo, aunqu
     revealed = false;
     last = window.Polidetector.analyze(input.value);
     render();
+    // Replay the stamp landing on every new analysis (not on "Ver las frases igualmente").
+    const stamp = $('stamp');
+    stamp.classList.remove('land');
+    void stamp.offsetWidth;
+    stamp.classList.add('land');
     $('editor').hidden = true;
     marked.hidden = false;
     $('edit').hidden = false;
