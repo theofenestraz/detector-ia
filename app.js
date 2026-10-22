@@ -32,7 +32,7 @@ Ahora estoy intentando usarla de otra forma: primero hago el ejercicio yo, aunqu
     $('clear').disabled = n === 0;
   };
 
-  const EXCL = { lista: 'lista', 'título': 'título', referencias: 'referencias', tabla: 'tabla', 'fórmula o código': 'fórmula o código', fragmento: 'fragmento suelto' };
+  const EXCL = { lista: 'lista', 'título': 'título', referencias: 'línea de referencias', tabla: 'tabla', 'fórmula o código': 'fórmula o código', fragmento: 'fragmento suelto' };
 
   // Rebuild the original text with each sentence wrapped and, when shown, its flagged terms underlined.
   function renderMarked(text, res, showMarks) {
@@ -93,7 +93,8 @@ Ahora estoy intentando usarla de otra forma: primero hago el ejercicio yo, aunqu
     const excludedTotal = Object.values(r.excludedBy).reduce((a, b) => a + b, 0);
     let meta = `Frases evaluadas: ${r.evaluatedSentences}, de las que ${plural(r.aiSentences, 'sale', 'salen')} como IA. Palabras de prosa: ${r.proseWords}.`;
     if (excludedTotal) {
-      meta += ' No evaluadas: ' + Object.entries(r.excludedBy).map(([k, n]) => `${n} ${EXCL[k]}`).join(', ') + '.';
+      const many = { lista: 'líneas de lista', 'título': 'títulos', referencias: 'líneas de referencias', tabla: 'líneas de tabla', 'fórmula o código': 'líneas de fórmula o código', fragmento: 'fragmentos sueltos' };
+      meta += ' No evaluadas: ' + Object.entries(r.excludedBy).map(([k, n]) => (n === 1 ? `1 ${EXCL[k]}` : `${n} ${many[k]}`)).join(', ') + '.';
     }
     $('meta').textContent = meta;
 
