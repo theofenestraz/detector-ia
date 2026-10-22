@@ -1,4 +1,4 @@
-# Huella
+# Polidetector
 
 Detector de texto generado por IA que funciona entero en el navegador. Pegas un texto y te dice qué porcentaje suena a IA, marca cada frase en amarillo según lo sospechosa que sea y explica por qué (frases hechas, palabras comodín, rayas, enumeraciones de tres, longitud de frase demasiado regular, etc.). No reescribe nada: sirve para encontrar las frases que conviene revisar.
 

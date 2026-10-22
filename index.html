@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Huella, detector de IA</title>
+<title>Polidetector</title>
 <meta name="description" content="Pega un texto y mira qué frases suenan a inteligencia artificial. Todo se analiza en tu navegador.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Literata:opsz,wght@7..72,400;7..72,500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
 <header class="top">
-  <h1 class="brand">Huella</h1>
+  <h1 class="brand">Polidetector</h1>
   <p class="tagline">Pega un texto y mira qué frases suenan a inteligencia artificial, con los criterios que publica Turnitin. Nada sale de tu navegador.</p>
 </header>
 
@@ -67,7 +67,7 @@
 
     <details class="about">
       <summary>¿Qué criterios sigue y cuánto fiarse?</summary>
-      <p>Huella aplica las reglas que Turnitin publica en su centro de ayuda sobre su detector de IA:</p>
+      <p>Polidetector aplica las reglas que Turnitin publica en su centro de ayuda sobre su detector de IA:</p>
       <ul>
         <li>Solo evalúa frases de prosa. Las listas, títulos, referencias, tablas, fórmulas y código se quitan y no cuentan en el porcentaje.</li>
         <li>Cada frase recibe una puntuación entre 0 y 1 teniendo en cuenta las frases de alrededor. Si supera el umbral es IA y si no, humana.</li>
@@ -76,12 +76,12 @@
         <li>Entre el 1 % y el 19 % se muestra «*%», sin cifra ni subrayados, porque ahí los falsos positivos son más probables.</li>
         <li>Las primeras y últimas frases necesitan una puntuación más alta, porque las introducciones y conclusiones genéricas dan más falsos positivos.</li>
       </ul>
-      <p>Lo que no se puede copiar es el modelo de Turnitin, que es privado. Aquí la puntuación de cada frase sale de rasgos de estilo (frases hechas, palabras comodín, rayas, enumeraciones de tres, frases de longitud muy regular, tono coloquial…). El resultado es orientativo y puede no coincidir con el que te daría Turnitin. Huella no es un producto de Turnitin ni está relacionado con él. Tu texto no sale del navegador.</p>
+      <p>Lo que no se puede copiar es el modelo de Turnitin, que es privado. Aquí la puntuación de cada frase sale de rasgos de estilo (frases hechas, palabras comodín, rayas, enumeraciones de tres, frases de longitud muy regular, tono coloquial…). El resultado es orientativo y puede no coincidir con el que te daría Turnitin. Polidetector no es un producto de Turnitin ni está relacionado con él. Tu texto no sale del navegador.</p>
     </details>
   </aside>
 </main>
 
-<script src="detector.js?v=3"></script>
-<script src="app.js?v=3"></script>
+<script src="detector.js?v=4"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>

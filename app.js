@@ -169,7 +169,7 @@ Ahora estoy intentando usarla de otra forma: primero hago el ejercicio yo, aunqu
   function run() {
     if (!words(input.value)) return;
     revealed = false;
-    last = window.Huella.analyze(input.value);
+    last = window.Polidetector.analyze(input.value);
     render();
     $('editor').hidden = true;
     marked.hidden = false;

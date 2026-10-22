@@ -1,4 +1,4 @@
-// Huella: heuristic AI-text detector. Runs entirely in the browser (also loadable from Node for tests).
+// Polidetector: heuristic AI-text detector. Runs entirely in the browser (also loadable from Node for tests).
 (function (root) {
   'use strict';
 
@@ -266,5 +266,5 @@
 
   const api = { analyze, segment };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  else root.Huella = api;
+  else root.Polidetector = api;
 })(typeof window !== 'undefined' ? window : globalThis);
