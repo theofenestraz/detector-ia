@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Huella, detector de IA</title>
+<meta name="description" content="Pega un texto y mira qué frases suenan a inteligencia artificial. Todo se analiza en tu navegador.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Literata:opsz,wght@7..72,400;7..72,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <h1 class="brand">Huella</h1>
+  <p class="tagline">Pega un texto y mira qué frases suenan a inteligencia artificial. Nada sale de tu navegador.</p>
+</header>
+
+<main class="layout">
+  <section class="sheet" aria-label="Texto">
+    <div id="editor">
+      <label for="input" class="sr-only">Texto a analizar</label>
+      <textarea id="input" spellcheck="false" placeholder="Pega aquí tu texto. Funciona mejor a partir de unas 80 palabras."></textarea>
+    </div>
+    <div id="marked" class="marked" hidden></div>
+    <div class="toolbar">
+      <button id="analyze" class="btn primary" type="button">Analizar</button>
+      <button id="edit" class="btn" type="button" hidden>Editar texto</button>
+      <button id="sample" class="btn ghost" type="button">Probar con un ejemplo</button>
+      <span id="count" class="count">0 palabras</span>
+    </div>
+  </section>
+
+  <aside class="panel" aria-live="polite">
+    <div id="empty" class="empty">
+      <p>Cuando analices un texto verás aquí qué parte parece escrita por IA y por qué.</p>
+      <dl class="legend">
+        <div><dt><span class="swatch ai"></span></dt><dd>Suena a IA</dd></div>
+        <div><dt><span class="swatch doubt"></span></dt><dd>Dudosa</dd></div>
+        <div><dt><span class="swatch human"></span></dt><dd>Suena humana</dd></div>
+      </dl>
+    </div>
+
+    <div id="result" hidden>
+      <p class="score"><span id="pct">0</span><span class="unit">%</span></p>
+      <p class="score-label">del texto suena a IA</p>
+      <div class="bar" role="img" id="bar">
+        <span class="seg ai" id="segAI"></span><span class="seg doubt" id="segDoubt"></span><span class="seg human" id="segHuman"></span>
+      </div>
+      <dl class="legend split">
+        <div><dt><span class="swatch ai"></span></dt><dd>IA <b id="nAI">0%</b></dd></div>
+        <div><dt><span class="swatch doubt"></span></dt><dd>Dudosa <b id="nDoubt">0%</b></dd></div>
+        <div><dt><span class="swatch human"></span></dt><dd>Humana <b id="nHuman">0%</b></dd></div>
+      </dl>
+      <p id="verdict" class="verdict"></p>
+      <p id="warn" class="warn" hidden></p>
+
+      <h2 class="h">Lo que más pesa</h2>
+      <ul id="signals" class="signals"></ul>
+
+      <div id="detail" class="detail" hidden>
+        <h2 class="h">Frase seleccionada</h2>
+        <p id="detailP" class="detail-p"></p>
+        <ul id="detailList" class="signals"></ul>
+      </div>
+      <p class="hint">Toca cualquier frase del texto para ver por qué se ha marcado.</p>
+    </div>
+
+    <details class="about">
+      <summary>¿Cómo funciona y cuánto fiarse?</summary>
+      <p>Huella no usa ningún modelo de IA ni envía tu texto a ningún servidor. Busca rasgos que los modelos de lenguaje repiten mucho: frases hechas («cabe destacar», «juega un papel fundamental»), palabras comodín, rayas, enumeraciones de tres, conectores al inicio de cada frase y frases que miden todas casi lo mismo. También cuenta lo que suele delatar a una persona: tono coloquial, primera persona, puntuación expresiva o frases muy cortas.</p>
+      <p>Es una estimación orientativa. Un texto humano muy formal puede salir alto y un texto de IA retocado puede salir bajo. Úsalo para encontrar las frases que suenan artificiales, no como prueba de nada.</p>
+    </details>
+  </aside>
+</main>
+
+<script src="detector.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
