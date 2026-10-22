@@ -13,19 +13,20 @@
 <body>
 <header class="top">
   <h1 class="brand">Huella</h1>
-  <p class="tagline">Pega un texto y mira qué frases suenan a inteligencia artificial. Nada sale de tu navegador.</p>
+  <p class="tagline">Pega un texto y mira qué frases suenan a inteligencia artificial, con los criterios que publica Turnitin. Nada sale de tu navegador.</p>
 </header>
 
 <main class="layout">
   <section class="sheet" aria-label="Texto">
     <div id="editor">
       <label for="input" class="sr-only">Texto a analizar</label>
-      <textarea id="input" spellcheck="false" placeholder="Pega aquí tu texto. Funciona mejor a partir de unas 80 palabras."></textarea>
+      <textarea id="input" spellcheck="false" placeholder="Pega aquí tu texto. Hacen falta al menos 300 palabras de prosa para dar un porcentaje."></textarea>
     </div>
     <div id="marked" class="marked" hidden></div>
     <div class="toolbar">
       <button id="analyze" class="btn primary" type="button">Analizar</button>
       <button id="edit" class="btn" type="button" hidden>Editar texto</button>
+      <button id="clear" class="btn" type="button">Borrar texto</button>
       <button id="sample" class="btn ghost" type="button">Probar con un ejemplo</button>
       <span id="count" class="count">0 palabras</span>
     </div>
@@ -33,43 +34,49 @@
 
   <aside class="panel" aria-live="polite">
     <div id="empty" class="empty">
-      <p>Cuando analices un texto verás aquí qué parte parece escrita por IA y por qué.</p>
+      <p>Cuando analices un texto verás aquí qué parte de la prosa parece escrita por IA, con los mismos criterios que aplica Turnitin.</p>
       <dl class="legend">
-        <div><dt><span class="swatch ai"></span></dt><dd>Suena a IA</dd></div>
-        <div><dt><span class="swatch doubt"></span></dt><dd>Dudosa</dd></div>
-        <div><dt><span class="swatch human"></span></dt><dd>Suena humana</dd></div>
+        <div><dt><span class="swatch ai"></span></dt><dd>Frase clasificada como IA</dd></div>
+        <div><dt><span class="swatch human"></span></dt><dd>Frase clasificada como humana</dd></div>
+        <div><dt><span class="swatch excl"></span></dt><dd>No evaluada (listas, títulos, referencias, tablas, código)</dd></div>
       </dl>
     </div>
 
     <div id="result" hidden>
-      <p class="score"><span id="pct">0</span><span class="unit">%</span></p>
-      <p class="score-label">del texto suena a IA</p>
+      <p class="score"><span id="pct">0</span><span class="unit" id="unit">%</span></p>
+      <p class="score-label" id="scoreLabel">de la prosa evaluada parece IA</p>
       <div class="bar" role="img" id="bar">
-        <span class="seg ai" id="segAI"></span><span class="seg doubt" id="segDoubt"></span><span class="seg human" id="segHuman"></span>
+        <span class="seg ai" id="segAI"></span><span class="seg human" id="segHuman"></span>
       </div>
-      <dl class="legend split">
-        <div><dt><span class="swatch ai"></span></dt><dd>IA <b id="nAI">0%</b></dd></div>
-        <div><dt><span class="swatch doubt"></span></dt><dd>Dudosa <b id="nDoubt">0%</b></dd></div>
-        <div><dt><span class="swatch human"></span></dt><dd>Humana <b id="nHuman">0%</b></dd></div>
-      </dl>
+      <p id="meta" class="meta"></p>
       <p id="verdict" class="verdict"></p>
-      <p id="warn" class="warn" hidden></p>
+      <button id="reveal" class="btn small" type="button" hidden>Ver las frases igualmente</button>
 
-      <h2 class="h">Lo que más pesa</h2>
-      <ul id="signals" class="signals"></ul>
+      <div id="signalsBox">
+        <h2 class="h">Lo que más pesa en las frases marcadas</h2>
+        <ul id="signals" class="signals"></ul>
+      </div>
 
       <div id="detail" class="detail" hidden>
         <h2 class="h">Frase seleccionada</h2>
         <p id="detailP" class="detail-p"></p>
         <ul id="detailList" class="signals"></ul>
       </div>
-      <p class="hint">Toca cualquier frase del texto para ver por qué se ha marcado.</p>
+      <p class="hint" id="hint">Toca cualquier frase del texto para ver por qué se ha clasificado así.</p>
     </div>
 
     <details class="about">
-      <summary>¿Cómo funciona y cuánto fiarse?</summary>
-      <p>Huella no usa ningún modelo de IA ni envía tu texto a ningún servidor. Busca rasgos que los modelos de lenguaje repiten mucho: frases hechas («cabe destacar», «juega un papel fundamental»), palabras comodín, rayas, enumeraciones de tres, conectores al inicio de cada frase y frases que miden todas casi lo mismo. También cuenta lo que suele delatar a una persona: tono coloquial, primera persona, puntuación expresiva o frases muy cortas.</p>
-      <p>Es una estimación orientativa. Un texto humano muy formal puede salir alto y un texto de IA retocado puede salir bajo. Úsalo para encontrar las frases que suenan artificiales, no como prueba de nada.</p>
+      <summary>¿Qué criterios sigue y cuánto fiarse?</summary>
+      <p>Huella aplica las reglas que Turnitin publica en su centro de ayuda sobre su detector de IA:</p>
+      <ul>
+        <li>Solo evalúa frases de prosa. Las listas, títulos, referencias, tablas, fórmulas y código se quitan y no cuentan en el porcentaje.</li>
+        <li>Cada frase recibe una puntuación entre 0 y 1 teniendo en cuenta las frases de alrededor. Si supera el umbral es IA y si no, humana.</li>
+        <li>El porcentaje es la proporción de frases evaluadas que salen como IA, no del texto entero.</li>
+        <li>Hacen falta al menos 300 palabras de prosa y como mucho 30.000.</li>
+        <li>Entre el 1 % y el 19 % se muestra «*%», sin cifra ni subrayados, porque ahí los falsos positivos son más probables.</li>
+        <li>Las primeras y últimas frases necesitan una puntuación más alta, porque las introducciones y conclusiones genéricas dan más falsos positivos.</li>
+      </ul>
+      <p>Lo que no se puede copiar es el modelo de Turnitin, que es privado. Aquí la puntuación de cada frase sale de rasgos de estilo (frases hechas, palabras comodín, rayas, enumeraciones de tres, frases de longitud muy regular, tono coloquial…). El resultado es orientativo y puede no coincidir con el que te daría Turnitin. Huella no es un producto de Turnitin ni está relacionado con él. Tu texto no sale del navegador.</p>
     </details>
   </aside>
 </main>

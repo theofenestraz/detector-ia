@@ -71,7 +71,6 @@
   const DASH = /[—–]/g;
   const TRIAD = /(?<![\p{L}])[\p{L}]+(?:\s[\p{L}]+)?,\s[\p{L}]+(?:\s[\p{L}]+)?,?\s(?:y|e|o|and|or)\s[\p{L}]+/iu;
   const NOT_X_BUT_Y = /(?:no\s(?:se\strata|es)\s[^.;]{1,60},\s?sino)|(?:(?:it's|it\sis)\snot\s(?:just\s|only\s|about\s)?[^.;]{1,50}[,;—–]\s?(?:it's|it\sis|but))/iu;
-  const MARKDOWN = /^\s*(?:#{1,6}\s|[-*•]\s|\d+[.)]\s)|\*\*[^*]+\*\*/u;
   const WORD = /[\p{L}\p{N}'’-]+/gu;
 
   const sigmoid = (x) => 1 / (1 + Math.exp(-x));
@@ -114,15 +113,61 @@
     return found;
   }
 
+  // Turnitin's published rules (guides.turnitin.com, "AI writing detection capabilities FAQs" and
+  // "File requirements"): only prose sentences in long-form writing are evaluated; lists, headers,
+  // references, tables, formulas and code are dropped and do not count towards the percentage.
+  const REF_HEADING = /^\s*(?:#+\s*)?(?:referencias(?: bibliográficas)?|bibliografía|webgrafía|fuentes|references|bibliography|works cited|sources)\s*:?\s*$/iu;
+  const CITATION = /(?:\(\d{4}[a-z]?\)|\b(?:19|20)\d{2}\)?\.\s|doi:|https?:\/\/|www\.|et al\.)/iu;
+
+  function exclusion(line, s, words) {
+    if (/^\s*(?:[-*•·▪◦–—]\s|\d+[.)]\s|[a-z][.)]\s)/iu.test(line)) return 'lista';
+    if (/^\s*#{1,6}\s/u.test(line)) return 'título';
+    if (/\t|\|/.test(line) || / {3,}\S/.test(line.trim())) return 'tabla';
+    const letters = (s.match(/\p{L}/gu) || []).length;
+    if (/[{}=<>^\\]|\);?$/.test(s) || letters / Math.max(s.replace(/\s/g, '').length, 1) < 0.5) return 'fórmula o código';
+    if (!/[.!?…:;"»”)]$/u.test(line.trim()) && words < 12) return 'título';
+    if (words < 3) return 'fragmento';
+    return null;
+  }
+
+  const MIN_WORDS = 300;
+  const MAX_WORDS = 30000;
+  const THRESHOLD = 0.6;
+  // Turnitin reports more false positives in generic intro/conclusion sentences and raised the bar there.
+  const EDGE_THRESHOLD = 0.75;
+  const EDGE = 2;
+
   function analyze(text) {
-    const sentences = segment(text || '');
+    text = text || '';
+    const sentences = segment(text);
     const totalWords = (text.match(WORD) || []).length;
 
-    // Humans vary sentence length much more than LLMs do ("burstiness"). Measured over a window of
-    // neighbouring sentences so that a human paragraph inside an AI text is judged on its own.
-    const lens = sentences.map((s) => (s.text.match(WORD) || []).length);
+    // Tag each sentence with its paragraph and whether it qualifies as prose.
+    let inRefs = false;
+    let para = 0;
+    let lastLine = -1;
+    sentences.forEach((s) => {
+      const ls = text.lastIndexOf('\n', s.start - 1) + 1;
+      let le = text.indexOf('\n', s.end);
+      if (le < 0) le = text.length;
+      const line = text.slice(ls, le);
+      if (ls !== lastLine) {
+        if (/\n\s*\n\s*$/.test(text.slice(0, ls)) || lastLine === -1) para++;
+        lastLine = ls;
+        if (REF_HEADING.test(line)) inRefs = true;
+      }
+      s.para = para;
+      s.words = (s.text.match(WORD) || []).length;
+      const refLike = CITATION.test(line) && /^\s*\p{Lu}[\p{L}'’-]+,\s\p{Lu}\./u.test(line);
+      s.excluded = inRefs || refLike ? 'referencias' : exclusion(line, s.text, s.words);
+    });
+    const prose = sentences.filter((s) => !s.excluded);
+    const proseWords = prose.reduce((n, s) => n + s.words, 0);
+
+    // Burstiness: humans vary sentence length much more than LLMs do.
+    const lens = prose.map((s) => s.words);
     const burst = lens.map((_, i) => {
-      const win = lens.slice(Math.max(0, i - 2), i + 3).filter((n) => n >= 3);
+      const win = lens.slice(Math.max(0, i - 2), i + 3);
       if (win.length < 4) return null;
       const cv = stdev(win) / mean(win);
       if (cv < 0.25) return { label: 'Frases vecinas de longitud casi idéntica', weight: 0.6 };
@@ -132,21 +177,23 @@
     });
     const docReasons = [];
     let docBias = 0;
-    const paras = text.split(/\n\s*\n/).map((p) => (p.match(WORD) || []).length).filter((n) => n > 15);
+    const paraWords = {};
+    prose.forEach((s) => { paraWords[s.para] = (paraWords[s.para] || 0) + s.words; });
+    const paras = Object.values(paraWords).filter((n) => n > 15);
     if (paras.length >= 3 && stdev(paras) / mean(paras) < 0.2) {
       docBias += 0.3; docReasons.push({ label: 'Párrafos de tamaño casi idéntico', weight: 0.3 });
     }
 
     const signals = {};
-    const tally = (label, n = 1) => { signals[label] = (signals[label] || 0) + n; };
+    const tally = (label) => { signals[label] = (signals[label] || 0) + 1; };
 
-    const scored = sentences.map((s, i) => {
+    prose.forEach((s, i) => {
       const t = s.text;
-      const words = (t.match(WORD) || []).length;
+      const words = s.words;
       const reasons = [];
       const hits = [];
       let x = -1.3 + docBias;
-      const add = (label, w, detail) => { x += w; reasons.push({ label, weight: w, detail }); tally(label); };
+      const add = (label, w, detail) => { x += w; reasons.push({ label, weight: w, detail }); };
 
       const phrases = collect(PHRASES, t, 'phrase', hits);
       if (phrases.length) add('Frases hechas típicas de IA', Math.min(phrases.length, 3) * 1.1, phrases.join(', '));
@@ -157,11 +204,11 @@
       if (OPENERS.test(t)) add('Empieza con conector formal', 0.6, t.match(OPENERS)[0]);
       if (TRIAD.test(t)) add('Enumeración de tres elementos', 0.5, t.match(TRIAD)[0]);
       if (NOT_X_BUT_Y.test(t)) add('Estructura «no es X, sino Y»', 0.9);
-      if (MARKDOWN.test(t)) add('Formato de lista o negritas', 0.6);
+      if (/\*\*[^*]+\*\*/.test(t)) add('Negritas dentro del texto', 0.6);
       if (burst[i]) add(burst[i].label, burst[i].weight);
-      if (words >= 14 && words <= 32) { x += 0.35; reasons.push({ label: 'Longitud de frase típica de IA', weight: 0.35 }); }
+      if (words >= 14 && words <= 32) add('Longitud de frase típica de IA', 0.35);
       const letters = (t.match(/\p{L}/gu) || []).length;
-      if (words >= 6 && letters / words > 5.6) { x += 0.35; reasons.push({ label: 'Vocabulario largo y formal', weight: 0.35 }); }
+      if (words >= 6 && letters / words > 5.6) add('Vocabulario largo y formal', 0.35);
 
       const informal = collect(INFORMAL_STRONG, t, 'human', hits).concat(collect(LAUGH, t, 'human', hits));
       if (informal.length) add('Tono coloquial', -1.4 * Math.min(informal.length, 2), informal.join(', '));
@@ -169,29 +216,51 @@
       if (weak.length) add('Muletillas de conversación', -0.45 * Math.min(weak.length, 2), weak.join(', '));
       if (/[!?]{2,}|\.{3}|…/.test(t)) add('Puntuación expresiva (!!, ...)', -0.6);
       if (/^[\p{Ll}]/u.test(t)) add('Empieza en minúscula', -0.6);
-      if (FIRST_PERSON.test(t)) { FIRST_PERSON.lastIndex = 0; add('Habla en primera persona', -0.5); }
       FIRST_PERSON.lastIndex = 0;
-      if (words > 0 && words < 6) { x -= 0.4; reasons.push({ label: 'Frase muy corta', weight: -0.4 }); }
-      if (words > 45) { x -= 0.3; reasons.push({ label: 'Frase muy larga y enredada', weight: -0.3 }); }
+      if (FIRST_PERSON.test(t)) add('Habla en primera persona', -0.5);
+      FIRST_PERSON.lastIndex = 0;
+      if (words < 6) add('Frase muy corta', -0.4);
+      if (words > 45) add('Frase muy larga y enredada', -0.3);
 
-      return { ...s, words, p: sigmoid(x), reasons, hits };
+      Object.assign(s, { x, reasons, hits });
     });
 
-    let ai = 0, doubt = 0, human = 0, weighted = 0;
-    for (const s of scored) {
-      if (s.p >= 0.6) ai += s.words; else if (s.p >= 0.4) doubt += s.words; else human += s.words;
-      weighted += s.p * s.words;
-    }
-    const sum = ai + doubt + human || 1;
+    // Turnitin scores each sentence "in context with the surrounding text" using overlapping
+    // segments of a few sentences, so blend each sentence with its neighbours in the same paragraph.
+    prose.forEach((s, i) => {
+      const win = prose.slice(Math.max(0, i - 3), i + 4).filter((o) => o.para === s.para);
+      const ctx = mean(win.map((o) => o.x));
+      s.p = sigmoid(0.55 * s.x + 0.45 * ctx);
+      s.own = sigmoid(s.x);
+      s.edge = i < EDGE || i >= prose.length - EDGE;
+      s.threshold = s.edge ? EDGE_THRESHOLD : THRESHOLD;
+      s.ai = s.p >= s.threshold;
+      if (s.ai) s.reasons.filter((r) => r.weight > 0).forEach((r) => tally(r.label));
+    });
+    sentences.forEach((s) => { if (s.excluded) Object.assign(s, { p: null, ai: false, reasons: [], hits: [] }); });
+
+    const aiCount = prose.filter((s) => s.ai).length;
+    const raw = prose.length ? Math.round((aiCount / prose.length) * 100) : 0;
+    let status = 'ok';
+    if (proseWords < MIN_WORDS) status = 'short';
+    else if (proseWords > MAX_WORDS) status = 'long';
+    else if (raw >= 1 && raw < 20) status = 'low';
+
+    const excludedBy = {};
+    sentences.filter((s) => s.excluded).forEach((s) => { excludedBy[s.excluded] = (excludedBy[s.excluded] || 0) + 1; });
+
     return {
-      sentences: scored,
+      sentences,
+      status,
+      percentAI: raw,
+      aiSentences: aiCount,
+      evaluatedSentences: prose.length,
+      proseWords,
       wordCount: totalWords,
-      percentAI: Math.round((ai / sum) * 100),
-      percentDoubt: Math.round((doubt / sum) * 100),
-      percentHuman: 100 - Math.round((ai / sum) * 100) - Math.round((doubt / sum) * 100),
-      probability: Math.round((weighted / sum) * 100),
+      excludedBy,
       signals,
       docReasons,
+      minWords: MIN_WORDS,
     };
   }
 

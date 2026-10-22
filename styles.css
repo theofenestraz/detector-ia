@@ -212,3 +212,10 @@ textarea::placeholder { color: var(--muted); }
 @media (prefers-reduced-motion: reduce) {
   .seg, .s { transition: none; }
 }
+
+.s.excl { color: var(--muted); cursor: default; text-decoration: line-through 1px var(--line); }
+.s.plain { background: transparent; }
+.swatch.excl { background: transparent; border: 1.5px dashed var(--muted); }
+.meta { margin: 12px 0 0; color: var(--muted); font-size: .9rem; }
+.btn.small { margin-top: 14px; padding: 7px 14px; font-size: .88rem; }
+.about ul { color: var(--muted); padding-left: 1.1em; margin: 0 0 10px; display: grid; gap: 6px; }
