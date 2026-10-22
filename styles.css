@@ -1,4 +1,4 @@
-/* Polidetector: the page is an official report form ("atestado"). The text is typed on ruled
+/* Polidetector: the page is an official report form ("atestado"). The text is typed on the
    paper, the verdict is a rubber stamp in red ink. */
 :root {
   --paper: #eef1ea;
@@ -105,10 +105,6 @@ textarea, .marked {
   line-height: var(--line);
   color: var(--ink);
   padding: 14px 28px 28px;
-  /* ruled form lines that sit under each typed line */
-  background-image: linear-gradient(to top, var(--rule) 1px, transparent 1px);
-  background-size: 100% var(--line);
-  background-position: 0 14px;
 }
 textarea {
   flex: 1;
@@ -117,8 +113,7 @@ textarea {
   border: 0;
   resize: vertical;
   outline: none;
-  background-color: transparent;
-  background-attachment: local;
+  background: transparent;
 }
 textarea::placeholder { color: var(--pencil); }
 .marked { flex: 1; white-space: pre-wrap; overflow-wrap: anywhere; }
